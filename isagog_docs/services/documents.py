@@ -251,6 +251,7 @@ class DocumentService:
             for doc in docs:
                 try:
                     doc["_id"] = str(doc["_id"])  # Convert ObjectId to string
+                    doc["analysis"] = None # Remove analysis results
                     valid_documents.append(Document(**doc))
                 except Exception as e:
                     logger.warning(f"Invalid document found with ID {doc.get('_id')}: {e}")
