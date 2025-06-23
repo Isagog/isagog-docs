@@ -9,7 +9,7 @@ settings = Config()
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
     """Clean test collection before/after all tests"""
-    client = MongoClient(settings.MONGO_URI)
+    client = MongoClient(settings.MONGO_URI, uuidRepresentation='standard')
     database = client.get_database(settings.MONGO_DB)
     if settings.MONGO_COLLECTION not in database.list_collection_names():
         database.create_collection(settings.MONGO_COLLECTION)
@@ -31,7 +31,7 @@ async def async_client():
 @pytest.fixture
 def db():
     """Database connection fixture"""
-    client = MongoClient(settings.MONGO_URI)
+    client = MongoClient(settings.MONGO_URI, uuidRepresentation='standard')
     database = client.get_database(settings.MONGO_DB)
     if settings.MONGO_COLLECTION not in database.list_collection_names():
         database.create_collection(settings.MONGO_COLLECTION)
