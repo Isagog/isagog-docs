@@ -34,5 +34,5 @@ def db():
     client = MongoClient(settings.MONGO_URI, uuidRepresentation='standard')
     database = client.get_database(settings.MONGO_DB)
     if settings.MONGO_COLLECTION not in database.list_collection_names():
-        database.create_collection(settings.MONGO_COLLECTION)
+        raise ValueError(f"Collection {settings.MONGO_COLLECTION} does not exist in database {settings.MONGO_DB}")
     return database[settings.MONGO_COLLECTION]

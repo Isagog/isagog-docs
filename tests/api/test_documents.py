@@ -25,8 +25,36 @@ def create_test_document(db, **overrides):
 
 # POST /documents/
 @pytest.mark.anyio
+async def test_create_document(async_client, db):
+    """ Test creating a new document with valid data.\n
+    This should return a 201 status code and the created document's ID.
+    """
+    files = {"file": ("test.pdf", b"content", "application/pdf")}
+    data = {
+        "title": "Test Document",
+        "author": "Test Author",
+        "description": "Test description",
+        "tags": ["tag1", "tag2"]
+    }
+    
+    response = await async_client.post("/documents/", data=data, files=files)
+    
+    assert response.status_code == 201
+    doc_id = response.json()["_id"]
+    
+    # Verify document was created in DB
+    doc = db.find_one({"_id": doc_id})
+    assert doc is not None
+    assert doc["title"] == data["title"]
+    assert doc["author"] == data["author"]
+    assert doc["description"] == data["description"]
+    assert set(doc["tags"]) == set(data["tags"])
+
+@pytest.mark.anyio
+"""Create a document with missing file.
+This should return a 422 status code with an error message indicating the file is required."""
 async def test_create_document_missing_file(async_client):
-    response = await async_client.post("/documents/", json={"title": "Test"})
+    response = await async_client.post("/documents/", data={"title": "Test"})
     assert response.status_code == 422
     assert "file" in response.text
 
@@ -68,6 +96,9 @@ async def test_create_document_invalid_metadata(async_client):
 # GET /documents/
 @pytest.mark.anyio
 async def test_list_documents_empty(async_client):
+    """ Test listing documents when no documents exist.\n
+    This should return an empty list with a 200 status code.
+    """
     response = await async_client.get("/documents/")
     assert response.status_code == 200
     assert response.json() == []
