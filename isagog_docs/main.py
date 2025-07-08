@@ -49,17 +49,23 @@ async def lifespan(app: FastAPI):
 
 
     # Initialise services
-    app.state.document_service = DocumentService(
-        collection = app.state.collection,
-        upload_dir = app.state.config.UPLOAD_DIR,
-        max_file_size_mb = app.state.config.MAX_FILE_SIZE_MB,
-        max_file_size_bytes = app.state.config.MAX_FILE_SIZE_BYTES
-    )
+    try: 
+        app.state.document_service = DocumentService(
+            collection = app.state.collection,
+            upload_dir = app.state.config.UPLOAD_DIR,
+            max_file_size_mb = app.state.config.MAX_FILE_SIZE_MB,
+            max_file_size_bytes = app.state.config.MAX_FILE_SIZE_BYTES
+        )
 
-    app.state.analysis_service = AnalysisService(
-        collection = app.state.collection,
-        config = app.state.config
-    )
+        app.state.analysis_service = AnalysisService(
+            collection = app.state.collection,
+            config = app.state.config
+        )
+    
+    except Exception as e:
+        logger.error(f"Failed to initialise services: {e}")
+        # Re-raise the exception to prevent the application from starting      
+        raise
 
     # Run the application
     yield
