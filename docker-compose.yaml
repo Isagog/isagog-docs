@@ -12,6 +12,7 @@ services:
       - "16001:8000"
     volumes:
       - /sata/experiments/isagog-docs/uploads:/app/uploads
+      - /sata/isagog-docs/ontology.ttl:/app/ontology.ttl
     environment:
       - APP_HOST=0.0.0.0
       - APP_PORT=8000
@@ -21,6 +22,8 @@ services:
       - MONGO_COLLECTION=docs
       - OPENROUTER_MODEL=google/gemini-2.0-flash-001
       - UPLOAD_DIR=/app/uploads
+      - ONTOLOGY_PATH=/app/ontology.ttl
+      - BASE_URI=http://isagog.org/ontology
     secrets:
       - OPENROUTER_API_KEY
     healthcheck:
@@ -29,6 +32,25 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # fuseki:
+  #   image: secoresearch/fuseki:5.0.0
+  #   ports:
+  #     - "16002:3030"
+  #   environment:
+  #     - ADMIN_PASSWORD=PaolaBorboni007
+  #     - ENABLE_UPDATE=true
+  #     - ENABLE_DATA_WRITE=true
+  #     - ENABLE_UPLOAD=true
+  #     - JVM_ARGS=-Xmx8G
+  #   volumes:
+  #     - /home/mema/fuseki-base/configuration:/fuseki-base/configuration
+  #     - /home/mema/fuseki-base/databases:/fuseki-base/databases
+  #     - /home/mema/fuseki-base/backups:/fuseki-base/backups
+  #     - /home/mema/fuseki-base/ttls:/fuseki-base/sources
+  #   networks:
+  #     - mema_network
+  #   restart: unless-stopped
 
   mongo:
     image: mongo:latest

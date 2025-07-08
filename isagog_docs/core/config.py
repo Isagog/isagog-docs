@@ -294,3 +294,7 @@ class Config:
         self.CONCEPT_FRAME = _MAXXI_CONCEPT_FRAME_IT
         self.SITUATION_PROMPT = _SITUATION_PROMPT_IT
         self.SITUATION_FRAME = _SITUATIION_FRAME_IT
+
+        # Knowledge Graph
+        self.ONTOLOGY_PATH = os.getenv("ONTOLOGY_PATH", "/app/ontology.ttl")
+        self.ONTOLOGY_BASE_URI = os.getenv("BASE_URI", "http://isagog.org/ontology")
