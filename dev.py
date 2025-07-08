@@ -14,6 +14,24 @@ settings.MONGO_COLLECTION = "dev-collection"
 settings.OPENROUTER_MODEL = "google/gemini-2.0-flash-001"
 settings.UPLOAD_DIR = "./uploads"
 
+# Override logging config for development
+LOGGING_CONFIG['loggers']['isagog_docs.main'] = {
+            'handlers': ['stream_handler', 'file_handler'],
+            'level': 'TRACE',
+            'propagate': False
+        }
+LOGGING_CONFIG['loggers']['isagog_docs.services.analysis'] = {
+            'handlers': ['stream_handler', 'file_handler'],
+            'level': 'DEBUG',
+            'propagate': False
+        }
+
+LOGGING_CONFIG['loggers']['isagog_docs.services.documents'] = { 
+            'handlers': ['stream_handler', 'file_handler'],
+            'level': 'DEBUG',
+            'propagate': False
+        }
+
 if __name__ == "__main__":
 
     uvicorn.run("isagog_docs.main:app", 
