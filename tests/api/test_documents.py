@@ -50,10 +50,11 @@ async def test_create_document(async_client, db):
     assert doc["description"] == data["description"]
     assert set(doc["tags"]) == set(data["tags"])
 
+
 @pytest.mark.anyio
-"""Create a document with missing file.
-This should return a 422 status code with an error message indicating the file is required."""
 async def test_create_document_missing_file(async_client):
+    """Create a document with missing file.
+    This should return a 422 status code with an error message indicating the file is required."""
     response = await async_client.post("/documents/", data={"title": "Test"})
     assert response.status_code == 422
     assert "file" in response.text
