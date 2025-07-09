@@ -1,6 +1,6 @@
 [project]
 name = "isagog-docs"
-version = "0.1.4.1"
+version = "0.1.4.2"
 description = ""
 authors = [
     {name = "David Valente",email = "d.valente@isagog.com"}
