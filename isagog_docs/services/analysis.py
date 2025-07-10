@@ -97,7 +97,7 @@ class AnalysisService:
         self.config = config
         self.pipeline = AnalysisPipelineBuilder(config).build()
         self.ontology = Ontology.load(config.ONTOLOGY_PATH)
-        self.assertion_builder = AssertionBuilder(config.ONTOLOGY_BASE_URI, self.ontology)
+        self.assertion_builder = AssertionBuilder(self.ontology, config.ONTOLOGY_BASE_URI)
 
     async def start_analysis(self, document_id: UUID) -> Document:
         """
