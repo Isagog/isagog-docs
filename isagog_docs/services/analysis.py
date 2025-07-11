@@ -15,10 +15,12 @@ from haystack import Pipeline, component
 from haystack import Document as HaystackDocument
 from haystack.components.preprocessors import DocumentCleaner
 
+from isagog_kg.models.logic_model import Ontology
 from isagog.components.proxy.openrouter_proxy import OpenRouterProxy
 from isagog.components.readers.file_reader import FileReader
 from isagog.components.analyzers.concept_analyzer import ConceptAnalyzer  
 from isagog.components.analyzers.situation_analyzer import SituationAnalyzer
+from isagog.components.builders.assertion_builder import AssertionBuilder
 
 from isagog_docs.core.config import Config
 from isagog_docs.schemas.document import Document
@@ -35,8 +37,6 @@ class DocumentToString:
         if not documents:
             return {"text": ""}
         return {"text": documents[0].content}
-
-
 
 class AnalysisPipelineBuilder:
     """Builder class for creating analysis pipelines."""
@@ -89,7 +89,6 @@ class AnalysisPipelineBuilder:
         for source, target in connections:
             self.pipeline.connect(source, target)
 
-
 class AnalysisService:
     """Service class for handling document analysis operations."""
     
@@ -97,6 +96,8 @@ class AnalysisService:
         self.analysis_collection = collection
         self.config = config
         self.pipeline = AnalysisPipelineBuilder(config).build()
+        self.ontology = Ontology.load(config.ONTOLOGY_PATH)
+        self.assertion_builder = AssertionBuilder(self.ontology, config.ONTOLOGY_BASE_URI)
 
     async def start_analysis(self, document_id: UUID) -> Document:
         """
@@ -179,10 +180,29 @@ class AnalysisService:
         Raises:
             HTTPException: Method not yet implemented
         """
-        raise HTTPException(
-            status_code=501, 
-            detail="Method not yet implemented"
-        )
+        try:
+            await self._update_document_analysis(document_id, edited_document) # updates mongodb
+
+            if edited_document.status == "approved":
+                logger.debug("Serializing analysis to triples...")
+                graph = self.assertion_builder.build(edited_document.analysis, subgraph_name=document_id)
+                logger.debug(
+                    graph.serialize(format="turtle", encode="utf-8")   
+                )
+                # TODO: Send to graph database
+                logger.info(f"Analysis {document_id} committed successfully.")
+                return edited_document
+
+            else:
+                logger.info(f"Analysis {document_id} not approved for commit.")
+                return edited_document
+
+        except Exception as e:
+            logger.error(f"Failed to committing to graph: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Failed to commit to graph: {e}"
+            )
     
     async def _get_document_or_raise(self, document_id: UUID) -> Dict[str, Any]:
         """Get document from database or raise HTTPException if not found."""
@@ -221,7 +241,7 @@ class AnalysisService:
         """Update document status in the database."""
         await self.analysis_collection.update_one(
             {"_id": document_id},
-            {"$set": {"status": str, 
+            {"$set": {"status": status, 
                       "updated_at": datetime.utcnow()}}
         )
     
@@ -273,12 +293,14 @@ class AnalysisService:
         document: Dict[str, Any]
     ) -> None:
         """Update document analysis results in the database."""
+        doc = document.model_dump(exclude_unset=True)
         await self.analysis_collection.update_one(
             {"_id": document_id},
             {
                 "$set": {
-                    "status": document["status"],
-                    "analysis": document["analysis"]
+                    "status": doc["status"],
+                    "analysis": doc["analysis"] 
                 }
             }
         )
+        logger.info(f"{document_id} Analysis updated successfully.")

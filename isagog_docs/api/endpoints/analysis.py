@@ -42,10 +42,10 @@ async def get_analysis(document_id: UUID, service = Depends(get_analysis_service
     return await service.get_analysis(document_id)
 
 @router.put("/", response_model=Document, tags=["Analysis"])
-async def commit_analysis(document_id: UUID, commit_data: AnalysisCommit, service = Depends(get_analysis_service)):
+async def commit_analysis(document_id: UUID, doc: Document, service = Depends(get_analysis_service)):
     """
     **Commit analysis for a document.**
 
     Allows a user to commit (e.g., approve or reject) the results of a document analysis.
     """
-    return await service.commit_analysis(document_id, commit_data)
+    return await service.commit_analysis(document_id, doc)
